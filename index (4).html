@@ -849,7 +849,8 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    (function() {
+    window.addEventListener('DOMContentLoaded', () => {
+      (function() {
       const SCHEMA_VERSION = 1;
       const STORAGE_KEY = 'rentabilidad_app_state_v1';
       const PERIOD_LABELS = { diario: 'Diario', semanal: 'Semanal', mensual: 'Mensual', anual: 'Anual' };
@@ -1194,9 +1195,17 @@
       init();
 
       function loadState() {
+        let raw = null;
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return getDefaultState();
+          raw = localStorage.getItem(STORAGE_KEY);
+        } catch (error) {
+          console.error('No se pudo cargar el estado, se usará la configuración por defecto.', error);
+          return getDefaultState();
+        }
+
+        if (!raw) return getDefaultState();
+
+        try {
           const parsed = JSON.parse(raw);
           if (parsed.version !== SCHEMA_VERSION) return getDefaultState();
           const merged = Object.assign({}, getDefaultState(), parsed);
@@ -1253,7 +1262,11 @@
       }
 
       function saveState() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (error) {
+          console.warn('No se pudo guardar en localStorage', error);
+        }
       }
 
       function copyProduct(product) {
@@ -2413,8 +2426,9 @@
         }, 2600);
       }
 
-      window.addEventListener('beforeunload', saveState);
-    })();
+        window.addEventListener('beforeunload', saveState);
+      })();
+    });
   </script>
 </body>
 </html>
